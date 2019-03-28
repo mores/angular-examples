@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { OAuthService, JwksValidationHandler, AuthConfig, NullValidationHandler } from 'angular-oauth2-oidc';
+import { OAuthService, JwksValidationHandler, AuthConfig, NullValidationHandler, OAuthErrorEvent } from 'angular-oauth2-oidc';
 
 export const authConfig: AuthConfig = {
 issuer: 'https://login.microsoftonline.com/<enter guid here>/v2.0',
@@ -35,6 +35,14 @@ export class AppComponent {
     this.oauthService.tokenEndpoint = 'https://login.microsoftonline.com/<enter guid here>/oauth2/v2.0/token/';
 
     this.oauthService.tokenValidationHandler = new NullValidationHandler();
+
+    this.authService.events.subscribe(event => {
+      if (event instanceof OAuthErrorEvent) {
+        console.error(event);
+      } else {
+        console.warn(event);
+      }
+    });
   }
 
   login() {
