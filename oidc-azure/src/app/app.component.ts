@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { OAuthService, JwksValidationHandler, AuthConfig } from 'angular-oauth2-oidc';
+import { OAuthService, JwksValidationHandler, AuthConfig, NullValidationHandler } from 'angular-oauth2-oidc';
 
 export const authConfig: AuthConfig = {
 issuer: 'https://login.microsoftonline.com/<enter guid here>/v2.0',
@@ -33,6 +33,8 @@ export class AppComponent {
     this.oauthService.userinfoEndpoint = 'https://graph.microsoft.com/oidc/userinfo';
     this.oauthService.loginUrl = 'https://login.microsoftonline.com/<enter guid here>/oauth2/v2.0/authorize';
     this.oauthService.tokenEndpoint = 'https://login.microsoftonline.com/<enter guid here>/oauth2/v2.0/token/';
+
+    this.oauthService.tokenValidationHandler = new NullValidationHandler();
   }
 
   login() {
