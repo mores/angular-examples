@@ -2,9 +2,11 @@ import { Component } from '@angular/core';
 import { OAuthService, JwksValidationHandler, AuthConfig, NullValidationHandler, OAuthErrorEvent } from 'angular-oauth2-oidc';
 
 export const authConfig: AuthConfig = {
-issuer: 'https://login.microsoftonline.com/<enter guid here>/v2.0',
-  redirectUri: window.location.origin,
-  clientId: '<enter client id here>'
+  issuer: 'https://login.microsoftonline.com/<enter guid here>/v2.0',
+  redirectUri: window.location.origin + '/oidc-azure',
+  clientId: '<enter client id here>',
+  strictDiscoveryDocumentValidation: false,
+  userinfoEndpoint: 'https://<private proxy server>/angular2azure/userinfo'
 };
 
 @Component({
@@ -17,9 +19,15 @@ export class AppComponent {
 
   constructor(private oauthService: OAuthService) {
     this.oauthService.configure(authConfig);
-    this.oauthService.tokenValidationHandler = new JwksValidationHandler();
-    this.oauthService.loadDiscoveryDocumentAndTryLogin();
-    this.oauthService.strictDiscoveryDocumentValidation = false;
+    this.oauthService.tokenValidationHandler = new NullValidationHandler();
+    this.oauthService.loadDiscoveryDocument( 'https://<private proxy server>/angular2azure/openid-configuration?tenant=<enter guid here>' );
+    this.oauthService.tryLogin({
+    onTokenReceived: context => {
+        console.debug("logged in");
+        this.oauthService.loadUserProfile();
+	console.info( this.oauthService.getAccessToken() );
+      }
+    });
     this.oauthService.responseType = 'code token id_token';
     this.oauthService.scope = 'openid';
 
@@ -30,13 +38,10 @@ export class AppComponent {
     * you can find the loginUrl and tokenEndpoint
      */
 
-    this.oauthService.userinfoEndpoint = 'https://graph.microsoft.com/oidc/userinfo';
     this.oauthService.loginUrl = 'https://login.microsoftonline.com/<enter guid here>/oauth2/v2.0/authorize';
     this.oauthService.tokenEndpoint = 'https://login.microsoftonline.com/<enter guid here>/oauth2/v2.0/token/';
 
-    this.oauthService.tokenValidationHandler = new NullValidationHandler();
-
-    this.authService.events.subscribe(event => {
+    this.oauthService.events.subscribe(event => {
       if (event instanceof OAuthErrorEvent) {
         console.error(event);
       } else {
