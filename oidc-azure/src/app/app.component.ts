@@ -2,12 +2,15 @@ import { Component } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { OAuthService, JwksValidationHandler, AuthConfig, NullValidationHandler, OAuthErrorEvent } from 'angular-oauth2-oidc';
 
+export const PRIVATE_PROXY_SERVER: string = '<private proxy server>';
+export const TENANT_GUID: string = '<enter guid here>';
+
 export const authConfig: AuthConfig = {
-  issuer: 'https://login.microsoftonline.com/<enter guid here>/v2.0',
+  issuer: 'https://login.microsoftonline.com/' + TENANT_GUID + '/v2.0',
   redirectUri: window.location.origin + '/oidc-azure',
   clientId: '<enter client id here>',
   strictDiscoveryDocumentValidation: false,
-  userinfoEndpoint: 'https://<private proxy server>/angular2azure/userinfo'
+  userinfoEndpoint: 'https://' + PRIVATE_PROXY_SERVER + '/angular2azure/userinfo'
 };
 
 @Component({
@@ -24,7 +27,7 @@ export class AppComponent {
   constructor(private httpClient: HttpClient, private oauthService: OAuthService) {
     this.oauthService.configure(authConfig);
     this.oauthService.tokenValidationHandler = new NullValidationHandler();
-    this.oauthService.loadDiscoveryDocument( 'https://<private proxy server>/angular2azure/openid-configuration?tenant=<enter guid here>' );
+    this.oauthService.loadDiscoveryDocument( 'https://' + PRIVATE_PROXY_SERVER + '/angular2azure/openid-configuration?tenant=' + TENANT_GUID );
     this.oauthService.tryLogin({
     onTokenReceived: context => {
         console.debug("logged in");
@@ -43,8 +46,8 @@ export class AppComponent {
     * you can find the loginUrl and tokenEndpoint
      */
 
-    this.oauthService.loginUrl = 'https://login.microsoftonline.com/<enter guid here>/oauth2/v2.0/authorize';
-    this.oauthService.tokenEndpoint = 'https://login.microsoftonline.com/<enter guid here>/oauth2/v2.0/token/';
+    this.oauthService.loginUrl = 'https://login.microsoftonline.com/' + TENANT_GUID + '/oauth2/v2.0/authorize';
+    this.oauthService.tokenEndpoint = 'https://login.microsoftonline.com/' + TENANT_GUID + '/oauth2/v2.0/token/';
 
     this.oauthService.events.subscribe(event => {
       if (event instanceof OAuthErrorEvent) {
@@ -76,7 +79,7 @@ export class AppComponent {
        var headers = new HttpHeaders({
 		"Authorization": "Bearer " + this.oauthService.getIdToken()
 	});
-	this.httpClient.get( 'https://<private proxy server>/angular2azure/private?tenant=<enter guid here>', { headers: headers } ).subscribe( (result) => {
+	this.httpClient.get( 'https://' + PRIVATE_PROXY_SERVER + '/angular2azure/private?tenant=' + TENANT_GUID, { headers: headers } ).subscribe( (result) => {
 		console.log( result );
 		this.raw = JSON.stringify( result );
 	});
