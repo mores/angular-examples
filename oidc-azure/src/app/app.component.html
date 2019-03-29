@@ -6,7 +6,15 @@
 
   <div *ngIf="givenName">
 	<h2>Hi, {{givenName}}!</h2>
-	<button (click)="logout()">Logout</button>
+	<div>
+		<button (click)="get_private()">GET /private</button>
+	</div>
+	<div>
+		<h3>{{raw}}</h3>
+	</div>
+	<div>
+		<button (click)="logout()">Logout</button>
+	</div>
   </div>
 
   <div *ngIf="!givenName">

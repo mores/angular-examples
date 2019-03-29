@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { OAuthService, JwksValidationHandler, AuthConfig, NullValidationHandler, OAuthErrorEvent } from 'angular-oauth2-oidc';
 
 export const authConfig: AuthConfig = {
@@ -14,10 +15,13 @@ export const authConfig: AuthConfig = {
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
+
 export class AppComponent {
+  
+  raw = '';
   title = 'oidc-azure';
 
-  constructor(private oauthService: OAuthService) {
+  constructor(private httpClient: HttpClient, private oauthService: OAuthService) {
     this.oauthService.configure(authConfig);
     this.oauthService.tokenValidationHandler = new NullValidationHandler();
     this.oauthService.loadDiscoveryDocument( 'https://<private proxy server>/angular2azure/openid-configuration?tenant=<enter guid here>' );
@@ -26,6 +30,7 @@ export class AppComponent {
         console.debug("logged in");
         this.oauthService.loadUserProfile();
 	console.info( this.oauthService.getAccessToken() );
+	console.info( this.oauthService.getIdToken() );
       }
     });
     this.oauthService.responseType = 'code token id_token';
@@ -65,4 +70,15 @@ export class AppComponent {
     }
     return claims['name'];
   }
+
+  get_private() {
+
+       var headers = new HttpHeaders({
+		"Authorization": "Bearer " + this.oauthService.getIdToken()
+	});
+	this.httpClient.get( 'https://<private proxy server>/angular2azure/private?tenant=<enter guid here>', { headers: headers } ).subscribe( (result) => {
+		console.log( result );
+		this.raw = JSON.stringify( result );
+	});
+    }
 }
