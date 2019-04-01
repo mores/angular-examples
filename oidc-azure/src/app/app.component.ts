@@ -37,7 +37,7 @@ export class AppComponent {
       }
     });
     this.oauthService.responseType = 'code token id_token';
-    this.oauthService.scope = 'openid';
+    this.oauthService.scope = 'openid email profile';
 
     /* This needs to be set manually b/c ADFS and Azure AD do not support CORS */
 
