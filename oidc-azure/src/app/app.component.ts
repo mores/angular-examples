@@ -12,8 +12,7 @@ export const authConfig: AuthConfig = {
   requestAccessToken: false,
   showDebugInformation: true,
   clientId: '<enter client id here>',
-  strictDiscoveryDocumentValidation: false,
-  userinfoEndpoint: 'https://' + PRIVATE_PROXY_SERVER + '/angular2azure/userinfo'
+  strictDiscoveryDocumentValidation: false
 };
 
 @Component({
