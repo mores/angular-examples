@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { OAuthService, JwksValidationHandler, AuthConfig, NullValidationHandler, OAuthErrorEvent } from 'angular-oauth2-oidc';
+import { OAuthService, AuthConfig, OAuthErrorEvent } from 'angular-oauth2-oidc';
+import { SignatureValidationHandler } from './signature-validation-handler';
 
 export const PRIVATE_PROXY_SERVER: string = '<private proxy server>';
 export const TENANT_GUID: string = '<enter guid here>';
@@ -8,6 +9,8 @@ export const TENANT_GUID: string = '<enter guid here>';
 export const authConfig: AuthConfig = {
   issuer: 'https://login.microsoftonline.com/' + TENANT_GUID + '/v2.0',
   redirectUri: window.location.origin + '/oidc-azure',
+  requestAccessToken: false,
+  showDebugInformation: true,
   clientId: '<enter client id here>',
   strictDiscoveryDocumentValidation: false,
   userinfoEndpoint: 'https://' + PRIVATE_PROXY_SERVER + '/angular2azure/userinfo'
@@ -26,17 +29,18 @@ export class AppComponent {
 
   constructor(private httpClient: HttpClient, private oauthService: OAuthService) {
     this.oauthService.configure(authConfig);
-    this.oauthService.tokenValidationHandler = new NullValidationHandler();
-    this.oauthService.loadDiscoveryDocument( 'https://' + PRIVATE_PROXY_SERVER + '/angular2azure/openid-configuration?tenant=' + TENANT_GUID );
-    this.oauthService.tryLogin({
-    onTokenReceived: context => {
-        console.debug("logged in");
-        this.oauthService.loadUserProfile();
-	console.info( this.oauthService.getAccessToken() );
-	console.info( this.oauthService.getIdToken() );
-      }
+    this.oauthService.tokenValidationHandler = new SignatureValidationHandler();
+    this.oauthService.loadDiscoveryDocument( 'https://' + PRIVATE_PROXY_SERVER + '/angular2azure/openid-configuration?tenant=' + TENANT_GUID ).then( doc => {
+	    this.oauthService.tryLogin({
+	    onTokenReceived: context => {
+              console.debug("logged in");
+              console.info( this.oauthService.getAccessToken() );
+              console.info( this.oauthService.getIdToken() );
+            }
+         })
     });
-    this.oauthService.responseType = 'code token id_token';
+
+    this.oauthService.responseType = 'id_token';
     this.oauthService.scope = 'openid email profile';
 
     /* This needs to be set manually b/c ADFS and Azure AD do not support CORS */
@@ -47,7 +51,6 @@ export class AppComponent {
      */
 
     this.oauthService.loginUrl = 'https://login.microsoftonline.com/' + TENANT_GUID + '/oauth2/v2.0/authorize';
-    this.oauthService.tokenEndpoint = 'https://login.microsoftonline.com/' + TENANT_GUID + '/oauth2/v2.0/token/';
 
     this.oauthService.events.subscribe(event => {
       if (event instanceof OAuthErrorEvent) {
@@ -77,7 +80,7 @@ export class AppComponent {
   get_private() {
 
        var headers = new HttpHeaders({
-		"Authorization": "Bearer " + this.oauthService.getIdToken()
+		"Authorization": this.oauthService.getIdToken()
 	});
 	this.httpClient.get( 'https://' + PRIVATE_PROXY_SERVER + '/angular2azure/private?tenant=' + TENANT_GUID, { headers: headers } ).subscribe( (result) => {
 		console.log( result );
