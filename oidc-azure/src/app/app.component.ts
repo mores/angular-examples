@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { OAuthService, AuthConfig, OAuthErrorEvent } from 'angular-oauth2-oidc';
 import { SignatureValidationHandler } from './signature-validation-handler';
 
+/* A private proxy server is required b/c ADFS and Azure AD do not support CORS */
 export const PRIVATE_PROXY_SERVER: string = '<private proxy server>';
 export const TENANT_GUID: string = '<enter guid here>';
 
@@ -29,7 +30,13 @@ export class AppComponent {
   constructor(private httpClient: HttpClient, private oauthService: OAuthService) {
     this.oauthService.configure(authConfig);
     this.oauthService.tokenValidationHandler = new SignatureValidationHandler();
-    this.oauthService.loadDiscoveryDocument( 'https://' + PRIVATE_PROXY_SERVER + '/angular2azure/openid-configuration?tenant=' + TENANT_GUID ).then( doc => {
+
+    /*
+    * From this url: https://login.microsoftonline.com/<enter domain name>/v2.0/.well-known/openid-configuration
+    * you can find the loginUrl and tokenEndpoint
+     */
+
+     this.oauthService.loadDiscoveryDocument( 'https://' + PRIVATE_PROXY_SERVER + '/angular2azure/openid-configuration?tenant=' + TENANT_GUID ).then( doc => {
 	    this.oauthService.tryLogin({
 	    onTokenReceived: context => {
               console.debug("logged in");
@@ -41,13 +48,6 @@ export class AppComponent {
 
     this.oauthService.responseType = 'id_token';
     this.oauthService.scope = 'openid email profile';
-
-    /* This needs to be set manually b/c ADFS and Azure AD do not support CORS */
-
-    /*
-    * From this url: https://login.microsoftonline.com/<enter domain name>/v2.0/.well-known/openid-configuration
-    * you can find the loginUrl and tokenEndpoint
-     */
 
     this.oauthService.loginUrl = 'https://login.microsoftonline.com/' + TENANT_GUID + '/oauth2/v2.0/authorize';
 
